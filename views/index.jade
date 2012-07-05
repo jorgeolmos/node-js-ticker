@@ -1,0 +1,91 @@
+.span3
+	.well.sidebar-nav
+		ul.nav.nav-list#ticker-data
+			li#company-name.nav-header
+			li#ticker-name
+				a(href='#')
+			li#currency
+				a(href='#')
+			li#last
+				a(href='#')
+			li#high
+				a(href='#')
+			li#low
+				a(href='#')
+			li#datetime.active
+				a(href='#') Please enter the ticker name that you want to track
+
+.span9
+	#ticker-container.well
+		.control-group
+			label.control-label Ticker 
+			.controls
+				input#ticker-name(value='GOOG')
+				p.help-block Please enter the ticker symbol to get data stream for
+		.form-actions
+			button#get-stream.btn.btn-primary Get Stream!
+script
+	$(document).ready(function() {
+		var socket = io.connect('http://localhost');
+		socket.on('tweet', function (data) {
+			//console.log(data)
+			$('ul.tweet-stream').prepend('<li><span class="tiny-text">'+data.date+'</span><br/><b>@'+data.author+':</b>&nbsp;'+data.tweet+'</li>');
+		});
+		socket.on('twitter-api-limit', function (data) {
+			//console.log('Reached API limit');
+			$('#ticker-container').empty();
+			$('#ticker-container').append('<h2>Reached Twitter stream API limit</h2>');
+		});
+		socket.on('new-ticker', function (data) {
+			//console.log(data);
+			$('#ticker-container').empty();
+			$('#ticker-container').append('<h2>Twitter live stream tracking: '+data.ticker+'</h2><button class="btn btn-danger" id="toggle-stream">Pause</button>&nbsp;&nbsp;&nbsp;<button class="btn" id="new-ticker-track">Track new ticker</button>');
+			$('#ticker-container').append('<ul class="tweet-stream"></ul>');
+			$('#toggle-stream').click( function () {
+				var toggled = $(this).data('toggled');
+				$(this).data('toggled', !toggled);
+				if (!toggled) {
+					$(this).html('Resume');
+					$(this).removeClass('btn-danger');
+					$(this).addClass('btn-success');
+					socket.emit('pause', {});
+				}
+				else {
+					$(this).text('Pause');
+					$(this).removeClass('btn-success');
+					$(this).addClass('btn-danger');
+					socket.emit('resume', {});
+				}
+			});
+			$('#new-ticker-track').click(function(){
+				window.location = '/';
+			});
+		});
+		socket.on('unknown-ticker', function(data) {
+			$('#company-name').html('Uknown ticker: '+data.ticker).css('color', 'red');
+		});
+		socket.on('ticker-data-update', function(data) {
+			//console.log(data.ticker_update);
+			var d = new Date().toTimeString();
+			var positive = parseFloat(data.ticker_update.change['@'].data) > 0;
+			var color = positive ? '#093' : 'red';
+			$('#datetime a').html('Last update: '+d);
+			$('#company-name').html(data.ticker_update.company['@'].data).css('color', '#333');
+			$('#ticker-name a').html('<b>Symbol: </b>'+data.ticker_update.symbol['@'].data);
+			$('#currency a').html('<b>Currency: </b>'+data.ticker_update.currency['@'].data);
+			$('#last a').html('<b>Last: </b>'+data.ticker_update.last['@'].data+
+			'&nbsp;<span style="color: '+color+';">'+data.ticker_update.change['@'].data+' ('+data.ticker_update.perc_change['@'].data+'%)</span>');
+			$('#high a').html('<b>High: </b>'+data.ticker_update.high['@'].data);
+			$('#low a').html('<b>Low: </b>'+data.ticker_update.low['@'].data);
+		});
+		$('#get-stream').click(function(){
+			//console.log('emitted new-ticker');
+			socket.emit('new-ticker', {ticker: $('input#ticker-name').val()});
+		});
+		$('input#ticker-name').keypress(function(e) {
+			if(e.which == 13) {
+				$('button#get-stream').click();
+			}
+		});
+		$('input#ticker-name').focus();
+	});

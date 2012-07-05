@@ -1,0 +1,38 @@
+!!! 5
+html
+	head
+		title Node.js Twitter ticker
+		link(rel='stylesheet', href='/stylesheets/style.css')	
+		link(rel='stylesheet', href='/stylesheets/bootstrap.min.css')
+		//link(rel='stylesheet', href='/stylesheets/bootstrap-responsive.min.css')
+		script(type='text/javascript', src='http://code.jquery.com/jquery-1.7.0.min.js')
+		script(type='text/javascript', src='/javascripts/bootstrap.min.js')
+		script(type='text/javascript', src='/socket.io/socket.io.js')
+	body
+		div.navbar 
+			div.navbar-inner 
+				div.container-fluid 
+					a(href='/').brand Node.js Ticker 
+					- if (!everyauth.loggedIn)
+						ul.nav 
+							li 
+								a(href='/auth/twitter') <i class="icon-user icon-white"></i> Login with Twitter   
+					- else
+						div.btn-group.pull-right
+							a(href='#', data-toggle='dropdown').btn.dropdown-toggle <i class="icon-user"></i> #{everyauth.twitter.user.name} <span class="caret"/>
+							ul.dropdown-menu
+								li
+									a(href='/logout') Logout						
+						ul.nav 							
+							li 
+								a(href='/') Track new Ticker
+		div.container-fluid
+			- if (everyauth.loggedIn)
+				div.row-fluid#main-content!= body
+			- else
+				div.hero-unit
+					h1 Welcome to Node.js Ticker
+					p Login with your twitter accout to start tracking a Ticker on Twitter and Google Stock API
+			hr
+			footer 
+				p Jorge Olmos - jorgeolmos@gmail.com
