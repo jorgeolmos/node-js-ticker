@@ -1,10 +1,7 @@
 var http = require('http');
 
 var GoogleStock = function() {
-};
-
-GoogleStock.prototype = {
-	getXML: function(ticker, callback) {
+	this.getXML = function(ticker, callback) {
 		//console.log('Getting ticker data');
 		var options = { host: 'www.google.com', path: '/ig/api?stock='+ticker, port: 80, method: 'GET' }
 		var xml = '';
@@ -19,7 +16,7 @@ GoogleStock.prototype = {
 			console.log("Got error: " + e.message);   
 		}); 
 		googleReq.end();
-	}	
+	};
 };
 
 module.exports = GoogleStock;
